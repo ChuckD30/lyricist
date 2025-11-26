@@ -19,7 +19,37 @@ export async function createLyricist(formData: FormData) {
         },
     })
 
+    revalidatePath("/")
     redirect(`/lyricist/${lyricist.id}`)
+}
+
+export async function updateLyricist(id: string, formData: FormData) {
+    const name = formData.get("name") as string
+    const description = formData.get("description") as string
+
+    if (!name) {
+        throw new Error("Name is required")
+    }
+
+    await prisma.lyricist.update({
+        where: { id },
+        data: {
+            name,
+            description,
+        },
+    })
+
+    revalidatePath(`/lyricist/${id}`)
+    revalidatePath("/")
+}
+
+export async function deleteLyricist(id: string) {
+    await prisma.lyricist.delete({
+        where: { id },
+    })
+
+    revalidatePath("/")
+    redirect("/")
 }
 
 export async function getLyricists() {

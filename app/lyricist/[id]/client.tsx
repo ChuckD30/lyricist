@@ -12,7 +12,7 @@ import { ArrowLeft, Pause, Play, Plus, Trash2, Loader2, Pencil } from "lucide-re
 import { AudioPlayer } from "@/components/audio-player"
 import { SpotifyPlayer } from "@/components/spotify-player"
 import { SpotifySearch } from "@/components/spotify-search"
-import { addSong, updateSong, updateSegment } from "@/app/actions"
+import { addSong, updateSong, updateSegment, updateLyricist, deleteLyricist } from "@/app/actions"
 
 export default function LyricistClient({ lyricist }: { lyricist: any }) {
     // We can use the prop directly, but if we want optimistic updates we might want state.
@@ -28,6 +28,39 @@ export default function LyricistClient({ lyricist }: { lyricist: any }) {
     const [isEditing, setIsEditing] = useState(false)
     const [editingSong, setEditingSong] = useState<any>(null)
     const [editingSegment, setEditingSegment] = useState<any>(null)
+
+    const [isEditLyricistOpen, setIsEditLyricistOpen] = useState(false)
+    const [isDeleteLyricistOpen, setIsDeleteLyricistOpen] = useState(false)
+    const [editLyricistName, setEditLyricistName] = useState(lyricist.name)
+    const [editLyricistDescription, setEditLyricistDescription] = useState(lyricist.description || "")
+    const [isUpdatingLyricist, setIsUpdatingLyricist] = useState(false)
+    const [isDeletingLyricist, setIsDeletingLyricist] = useState(false)
+
+    const handleUpdateLyricist = async () => {
+        setIsUpdatingLyricist(true)
+        try {
+            const formData = new FormData()
+            formData.append("name", editLyricistName)
+            formData.append("description", editLyricistDescription)
+
+            await updateLyricist(lyricist.id, formData)
+            setIsEditLyricistOpen(false)
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setIsUpdatingLyricist(false)
+        }
+    }
+
+    const handleDeleteLyricist = async () => {
+        setIsDeletingLyricist(true)
+        try {
+            await deleteLyricist(lyricist.id)
+        } catch (error) {
+            console.error(error)
+            setIsDeletingLyricist(false)
+        }
+    }
 
     // Player state
     const [currentSong, setCurrentSong] = useState<any>(null)
@@ -162,13 +195,23 @@ export default function LyricistClient({ lyricist }: { lyricist: any }) {
 
     return (
         <main className="container mx-auto p-8 max-w-4xl pb-32">
-            <div className="mb-8">
+            <div className="mb-8 flex justify-between items-center">
                 <Link href="/">
                     <Button variant="ghost" className="pl-0 hover:pl-0 hover:bg-transparent">
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back to Dashboard
                     </Button>
                 </Link>
+                <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setIsEditLyricistOpen(true)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit Lyricist
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => setIsDeleteLyricistOpen(true)}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                    </Button>
+                </div>
             </div>
 
             <div className="flex justify-between items-start mb-8">
@@ -185,6 +228,7 @@ export default function LyricistClient({ lyricist }: { lyricist: any }) {
                             Add Song
                         </Button>
                     </DialogTrigger>
+                    {/* ... Add Song Dialog Content ... */}
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle>Add Song</DialogTitle>
@@ -281,6 +325,7 @@ export default function LyricistClient({ lyricist }: { lyricist: any }) {
                 </Dialog>
             </div>
 
+            {/* ... Songs Grid ... */}
             <div className="grid gap-4">
                 {songs.map((song: any) => (
                     <Card key={song.id}>
@@ -420,6 +465,59 @@ export default function LyricistClient({ lyricist }: { lyricist: any }) {
                         <Button onClick={handleUpdateSong} disabled={isEditing}>
                             {isEditing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Save Changes
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Lyricist Dialog */}
+            <Dialog open={isEditLyricistOpen} onOpenChange={setIsEditLyricistOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Lyricist</DialogTitle>
+                        <DialogDescription>Update the name and description of this collection.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="lyricist-name">Name</Label>
+                            <Input
+                                id="lyricist-name"
+                                value={editLyricistName}
+                                onChange={(e) => setEditLyricistName(e.target.value)}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="lyricist-desc">Description</Label>
+                            <Textarea
+                                id="lyricist-desc"
+                                value={editLyricistDescription}
+                                onChange={(e) => setEditLyricistDescription(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={handleUpdateLyricist} disabled={isUpdatingLyricist}>
+                            {isUpdatingLyricist && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Changes
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Lyricist Confirmation */}
+            <Dialog open={isDeleteLyricistOpen} onOpenChange={setIsDeleteLyricistOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Lyricist</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete "{lyricist.name}"? This action cannot be undone and will delete all songs in this collection.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDeleteLyricistOpen(false)}>Cancel</Button>
+                        <Button variant="destructive" onClick={handleDeleteLyricist} disabled={isDeletingLyricist}>
+                            {isDeletingLyricist && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Delete
                         </Button>
                     </DialogFooter>
                 </DialogContent>
