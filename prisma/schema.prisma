@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Lyricist {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  songs       Song[]
+}
+
+model Song {
+  id          String    @id @default(uuid())
+  title       String
+  artist      String
+  audioUrl    String
+  coverUrl    String?
+  spotifyId   String?
+  lyricistId  String
+  lyricist    Lyricist  @relation(fields: [lyricistId], references: [id], onDelete: Cascade)
+  segments    Segment[]
+  createdAt   DateTime  @default(now())
+}
+
+model Segment {
+  id        String   @id @default(uuid())
+  text      String
+  startTime Float
+  endTime   Float
+  songId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+}
