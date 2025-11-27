@@ -62,6 +62,22 @@ export default function LyricistClient({ lyricist }: { lyricist: any }) {
         }
     }
 
+    // Sync local state with props when they update (e.g. after editing a segment)
+    useEffect(() => {
+        if (!currentSong) return
+
+        const updatedSong = songs.find((s: any) => s.id === currentSong.id)
+        if (updatedSong && updatedSong !== currentSong) {
+            setCurrentSong(updatedSong)
+            if (currentSegment) {
+                const updatedSegment = updatedSong.segments.find((s: any) => s.id === currentSegment.id)
+                if (updatedSegment && updatedSegment !== currentSegment) {
+                    setCurrentSegment(updatedSegment)
+                }
+            }
+        }
+    }, [songs, currentSong, currentSegment])
+
     // Player state
     const [currentSong, setCurrentSong] = useState<any>(null)
     const [currentSegment, setCurrentSegment] = useState<any>(null)
