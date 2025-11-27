@@ -62,6 +62,12 @@ export default function LyricistClient({ lyricist }: { lyricist: any }) {
         }
     }
 
+
+    // Player state
+    const [currentSong, setCurrentSong] = useState<any>(null)
+    const [currentSegment, setCurrentSegment] = useState<any>(null)
+    const [isPlaying, setIsPlaying] = useState(false)
+
     // Sync local state with props when they update (e.g. after editing a segment)
     useEffect(() => {
         if (!currentSong) return
@@ -77,11 +83,6 @@ export default function LyricistClient({ lyricist }: { lyricist: any }) {
             }
         }
     }, [songs, currentSong, currentSegment])
-
-    // Player state
-    const [currentSong, setCurrentSong] = useState<any>(null)
-    const [currentSegment, setCurrentSegment] = useState<any>(null)
-    const [isPlaying, setIsPlaying] = useState(false)
 
     // Form state
     const [newSongTitle, setNewSongTitle] = useState("")
